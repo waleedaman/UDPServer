@@ -3,9 +3,11 @@
 #include <WiFiUdp.h> 
 #include "udp.h"
 #include "arduino_secrets.h"
+#include <Arduino_LSM6DS3.h>
 
 AHcode code;
 
+double roll = 0.00, pitch = 0.00;
 IPAddress ip(10, 0, 0, 10);
 IPAddress dnServer(10, 0, 0, 1);
 IPAddress gateway(10, 0, 0, 1);
@@ -32,6 +34,8 @@ int speed = 0;
 int height = 0;
 void setup() {
   Serial.begin(9600);
+  
+
   while (!Serial)
     if (WiFi.status() == WL_NO_MODULE) {
       Serial.println("Communication with WiFi module failed!");
@@ -49,8 +53,12 @@ void setup() {
     Serial.println("Creating access point failed");
     while (true);
   }
+  IMU.begin();
+  if (!IMU.begin()) {
+    Serial.println("Failed to initialize IMU!");
 
-  
+    while (1);
+  }
   server.begin();
   Udp.begin(localPort);
   Udp1.begin(4010);
@@ -235,6 +243,26 @@ void loop() {
       break;
     }
     case bl:{
+      float x, y, z;
+
+      if (IMU.accelerationAvailable()) {
+        IMU.readAcceleration(x, y, z);
+        z = 0.98-z;
+        Serial.print(x);
+        Serial.print('\t');
+        Serial.print(y);
+        Serial.print('\t');
+        Serial.println(z);
+        double x_Buff = float(x);
+        double y_Buff = float(y);
+        double z_Buff = float(z);
+        roll = atan2(y_Buff , z_Buff) * 57.3;
+        pitch = atan2((- x_Buff) , sqrt(y_Buff * y_Buff + z_Buff * z_Buff)) * 57.3;
+        Serial.print('\t');
+        Serial.print(roll);
+        Serial.print('\t');
+        Serial.println(pitch);
+      }
       state=start;
       break;
     }
