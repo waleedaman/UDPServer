@@ -262,6 +262,13 @@ void loop() {
         Serial.print(roll);
         Serial.print('\t');
         Serial.println(pitch);
+        Udp1.beginPacket(remoteIp,4005);
+        String h = String("RP;4010;"+String(roll)+";"+String(pitch));
+        h.toCharArray(packetBuffer2,sizeof(packetBuffer2));
+        Udp1.write(packetBuffer2);
+        Udp1.endPacket();
+        Udp1.flush();
+        memset(packetBuffer2, 0, sizeof(packetBuffer2)); 
       }
       state=start;
       break;
