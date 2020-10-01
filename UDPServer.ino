@@ -6,7 +6,7 @@
 #include <Arduino_LSM6DS3.h>
 
 AHcode code;
-
+String command = "";
 double roll = 0.00, pitch = 0.00;
 IPAddress ip(10, 0, 0, 10);
 IPAddress dnServer(10, 0, 0, 1);
@@ -269,8 +269,28 @@ void loop() {
         Udp1.endPacket();
         Udp1.flush();
         memset(packetBuffer2, 0, sizeof(packetBuffer2)); 
+        delay(100);
+        readpack(Udp,comm);
+        if(strlen(comm) != 0){
+          Serial.println(comm);
+          sub = strtok(comm,";");
+          String s(sub);
+          if(s.equals("st")){
+            state = start; 
+            code.setMotor("stop",0,0); 
+            command = "";    
+          }else if(s.equals("bu")){
+            command = "bu";
+          }else if(s.equals("bd")){
+            command = "bd";
+          }
+          if(command.equals("bd")){
+            code.moveDown(255);
+          }else if(command.equals("bu")){
+            code.moveUp(255);
+          }
+        }
       }
-      state=start;
       break;
     }
   } 
